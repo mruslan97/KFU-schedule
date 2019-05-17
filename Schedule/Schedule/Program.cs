@@ -19,6 +19,7 @@ namespace Schedule
 
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
+                .UseUrls("http://+:8443")
                 .UseStartup<Startup>();
     }
 }

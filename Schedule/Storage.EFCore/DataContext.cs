@@ -12,6 +12,9 @@ namespace Storage.EFCore
         public DbSet<Teacher> Teachers { get; set; }
 
         public DbSet<Group> Groups { get; set; }
+
+        public DbSet<VkUser> VkUsers { get; set; }
+
         /// <summary>
         ///     Конструктор класса без конфигурации
         /// </summary>
@@ -39,6 +42,13 @@ namespace Storage.EFCore
             {
                 entity
                     .HasIndex(x => x.GroupName)
+                    .IsUnique();
+            });
+
+            modelBuilder.Entity<VkUser>(entity =>
+            {
+                entity
+                    .HasIndex(x => x.UserId)
                     .IsUnique();
             });
 

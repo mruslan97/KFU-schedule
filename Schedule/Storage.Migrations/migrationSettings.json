@@ -1,5 +1,5 @@
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Server=localhost;Port=5435;Database=scheduleDb;User Id=postgres;Password=postgres;CommandTimeout=500;"
+    "DefaultConnection": "Server=localhost;Port=5432;Database=scheduleDb;User Id=postgres;Password=postgres;CommandTimeout=500;"
   }
 }

@@ -16,6 +16,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.PlatformAbstractions;
+using Schedule.Commands;
 using Schedule.Extensions;
 using Schedule.Mapper;
 using Schedule.Models;
@@ -25,6 +26,13 @@ using Schedule.Services.Impl.QueryDecorators;
 using Storage.EFCore.Extensions;
 using Storage.Migrations;
 using Swashbuckle.AspNetCore.Swagger;
+using Vk.Bot.Framework.Extensions;
+using VkNet;
+using VkNet.Abstractions;
+using VkNet.Categories;
+using VkNet.Enums.Filters;
+using VkNet.Model;
+using VkNet.Utils;
 
 
 namespace Schedule
@@ -94,11 +102,28 @@ namespace Schedule
                 }
             });
 
+            services.AddSingleton<IVkApi>(sp =>
+            {
+                var api = new VkApi(services);
+                
+                api.Authorize(new ApiAuthParams
+                {
+                    AccessToken = Configuration.GetSection("VkToken").Get<string>(),
+                    Settings = Settings.Messages
+
+                });
+
+                return api;
+            });
+
             var mappingConfig = new MapperConfiguration(cfg =>
             {
                 cfg.AddProfile(new MappingProfile(Configuration.GetSection(nameof(DomainOptions)).Get<DomainOptions>()));
             });
             services.AddSingleton(mappingConfig.CreateMapper());
+            services.AddVkBot<KpfuBot>(Configuration.GetSection("VkOptions"))
+                .AddUpdateHandler<HelpCommand>()
+                .Configure();
 
             return services.BuildDryIoc();
         }
@@ -125,6 +150,7 @@ namespace Schedule
             app.UseMvc();
             app.UseMvcWithDefaultRoute();
             app.UseSwagger();
+            app.UseVkBot<KpfuBot>();
             
             app.UseSwaggerUI(c =>
             {
