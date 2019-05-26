@@ -58,6 +58,12 @@ namespace Schedule.Entities
         public string SubjectKindName { get; set; }
 
         [Searchable]
-        public string Group { get; set; }
+        public string GroupName { get; set; }
+
+        public Group Group { get; set; }
+
+        public long GroupId { get; set; }
+
+        public long KpfuId { get; set; }
     }
 }

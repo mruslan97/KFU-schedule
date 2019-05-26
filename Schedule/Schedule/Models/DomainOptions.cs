@@ -13,5 +13,8 @@
 
         /// <summary> Семестр </summary>
         public string Semester { get; set; }
+
+        /// <summary> Идентификатор группы </summary>
+        public long GroupId { get; set; }
     }
 }

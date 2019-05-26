@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Vk.Bot.Framework;
 using Vk.Bot.Framework.Abstractions;
+using VkNet.Enums.SafetyEnums;
 using VkNet.Model.GroupUpdate;
 using VkNet.Model.RequestParams;
 
@@ -13,8 +14,16 @@ namespace Schedule.Commands
         {
         }
 
+        public override bool CanHandleUpdate(IBot bot, GroupUpdate update)
+        {
+            Console.WriteLine("Перехват апдейта из команды)");
+            return update.Type == GroupUpdateType.MessageReply || update.Type == GroupUpdateType.MessageNew;
+        }
+
         public override async Task<UpdateHandlingResult> HandleCommand(GroupUpdate update)
         {
+            if (update.Type == GroupUpdateType.MessageReply)
+                return UpdateHandlingResult.Handled;
             var random = new Random();
             await Task.FromResult(Bot.VkApiClient.Messages.Send(new MessagesSendParams
             {

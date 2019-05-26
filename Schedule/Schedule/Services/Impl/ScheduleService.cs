@@ -63,7 +63,7 @@ namespace Schedule.Services.Impl
                     uow.Commit();
                 }
 
-                return groups;
+                return Groups.GetAll().ToList();
             }
         }
 
@@ -106,7 +106,11 @@ namespace Schedule.Services.Impl
                         var json = await response.Content.ReadAsStringAsync();
                         var subjectRoot = JsonConvert.DeserializeObject<KpfuSubjectRoot>(json);
                         var subjects = subjectRoot.Subjects.Select(subject => Mapper.Map<Subject>(subject)).ToList();
-                        subjects.ForEach(x => x.Group = group.GroupName);
+                        subjects.ForEach(x =>
+                        {
+                            x.GroupName = group.GroupName;
+                            x.GroupId = group.Id;
+                        });
                         allSubjects.AddRange(subjects);
                     }
                     catch (Exception e)

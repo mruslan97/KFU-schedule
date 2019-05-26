@@ -58,6 +58,9 @@ namespace Schedule.Entities.Kpfu
         [JsonProperty("subject_kind_name")]
         public string SubjectKindName { get; set; }
 
+        [JsonProperty("subject_id")]
+        public string SubjectId { get; set; }
+
     }
     
     public sealed class KpfuSubjectRoot

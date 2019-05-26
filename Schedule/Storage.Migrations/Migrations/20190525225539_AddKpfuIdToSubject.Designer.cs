@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Storage.EFCore;
@@ -9,9 +10,10 @@ using Storage.EFCore;
 namespace Storage.Migrations.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20190525225539_AddKpfuIdToSubject")]
+    partial class AddKpfuIdToSubject
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -95,11 +97,8 @@ namespace Storage.Migrations.Migrations
                     b.Property<TimeSpan?>("EndTime")
                         .HasColumnName("end_time");
 
-                    b.Property<long>("GroupId")
-                        .HasColumnName("group_id");
-
-                    b.Property<string>("GroupName")
-                        .HasColumnName("group_name");
+                    b.Property<string>("Group")
+                        .HasColumnName("group");
 
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
@@ -147,9 +146,6 @@ namespace Storage.Migrations.Migrations
 
                     b.HasKey("Id")
                         .HasName("pk_subjects");
-
-                    b.HasIndex("GroupId")
-                        .HasName("ix_subjects_group_id");
 
                     b.HasIndex("Id")
                         .HasName("ix_subjects_id");
@@ -267,15 +263,6 @@ namespace Storage.Migrations.Migrations
                         .HasName("ix_vk_users_user_id");
 
                     b.ToTable("vk_users");
-                });
-
-            modelBuilder.Entity("Schedule.Entities.Subject", b =>
-                {
-                    b.HasOne("Schedule.Entities.Group", "Group")
-                        .WithMany()
-                        .HasForeignKey("GroupId")
-                        .HasConstraintName("fk_subjects_groups_group_id")
-                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("Schedule.Entities.VkUser", b =>

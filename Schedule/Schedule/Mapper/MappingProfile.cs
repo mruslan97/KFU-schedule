@@ -20,7 +20,8 @@ namespace Schedule.Mapper
             _hostName = options?.HostName.EndsWith('/') ?? false ? options.HostName : $"{options?.HostName}/";
 
             CreateMap<string, TimeSpan?>().ConvertUsing<DateTimeTypeConverter>();
-            CreateMap<KpfuSubject, Subject>();
+            CreateMap<KpfuSubject, Subject>()
+                .ForMember(x => x.KpfuId, x => x.MapFrom(s => s.SubjectId));
             CreateMap<KpfuGroup, Group>()
                 .ForMember(x => x.KpfuId, x => x.MapFrom(s => s.GroupId));
             CreateMap<KpfuTeacher, Teacher>()

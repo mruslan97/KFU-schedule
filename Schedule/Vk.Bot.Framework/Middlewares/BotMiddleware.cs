@@ -15,14 +15,14 @@ namespace Vk.Bot.Framework.Middlewares
     /// Middleware for handling Telegram bot's webhook requests
     /// </summary>
     /// <typeparam name="TBot">Type of bot</typeparam>
-    public class TelegramBotMiddleware<TBot>
+    public class BotMiddleware<TBot>
         where TBot : BotBase<TBot>
     {
         private readonly RequestDelegate _next;
 
         private readonly IBotManager<TBot> _botManager;
 
-        private readonly ILogger<TelegramBotMiddleware<TBot>> _logger;
+        private readonly ILogger<BotMiddleware<TBot>> _logger;
 
         /// <summary>
         /// Initializes an instance of middleware
@@ -30,9 +30,9 @@ namespace Vk.Bot.Framework.Middlewares
         /// <param name="next">Instance of request delegate</param>
         /// <param name="botManager">Bot manager for the bot</param>
         /// <param name="logger">Logger for this middleware</param>
-        public TelegramBotMiddleware(RequestDelegate next,
+        public BotMiddleware(RequestDelegate next,
             IBotManager<TBot> botManager,
-            ILogger<TelegramBotMiddleware<TBot>> logger)
+            ILogger<BotMiddleware<TBot>> logger)
         {
             _next = next;
             _botManager = botManager;
@@ -58,8 +58,6 @@ namespace Vk.Bot.Framework.Middlewares
             {
                 data = await reader.ReadToEndAsync();
             }
-
-            _logger.LogTrace($"Update Data:`{data}`");
 
             GroupUpdate update = null;
             try
@@ -87,6 +85,7 @@ namespace Vk.Bot.Framework.Middlewares
             catch (Exception e)
             {
                 _logger.LogError($"Error occured while handling update. {e.Message}");
+                _logger.LogWarning($"Отправлено 500 вк");
                 context.Response.StatusCode = StatusCodes.Status500InternalServerError;
             }
         }

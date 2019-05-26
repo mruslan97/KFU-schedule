@@ -10,6 +10,9 @@
         MainMenu,
 
         /// <summary> Настройки </summary>
-        Settings
+        Settings,
+
+        /// <summary> Поиск преподавателя </summary>
+        TeacherSearch
     }
 }

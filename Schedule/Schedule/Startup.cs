@@ -26,6 +26,7 @@ using Schedule.Services.Impl.QueryDecorators;
 using Storage.EFCore.Extensions;
 using Storage.Migrations;
 using Swashbuckle.AspNetCore.Swagger;
+using Vk.Bot.Framework.Abstractions;
 using Vk.Bot.Framework.Extensions;
 using VkNet;
 using VkNet.Abstractions;
@@ -122,7 +123,14 @@ namespace Schedule
             });
             services.AddSingleton(mappingConfig.CreateMapper());
             services.AddVkBot<KpfuBot>(Configuration.GetSection("VkOptions"))
-                .AddUpdateHandler<HelpCommand>()
+                //.AddUpdateHandler<HelpCommand>()
+                .AddUpdateHandler<MainMenuCommand>()
+                .AddUpdateHandler<HelloCommand>()
+                .AddUpdateHandler<SetupGroupCommand>()
+                .AddUpdateHandler<TodayCommand>()
+                .AddUpdateHandler<TomorrowCommand>()
+                .AddUpdateHandler<WeekCommand>()
+                .AddUpdateHandler<TeacherSearchCommand>()
                 .Configure();
 
             return services.BuildDryIoc();

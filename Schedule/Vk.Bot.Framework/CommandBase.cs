@@ -2,6 +2,7 @@
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Vk.Bot.Framework.Abstractions;
 using VkNet.Enums;
@@ -46,13 +47,8 @@ namespace Vk.Bot.Framework
         /// <returns><value>true</value> if this handler should get the update; otherwise <value>false</value></returns>
         public virtual bool CanHandleUpdate(IBot bot, GroupUpdate update)
         {
-           
-                Bot = Bot ?? bot;
-
-                var isTextMessage = update.Type == GroupUpdateType.MessageNew;
-
-                return isTextMessage && CanHandleCommand(update);
-            
+            Bot = Bot ?? bot;
+            return CanHandleCommand(update);
         }
 
         /// <summary>

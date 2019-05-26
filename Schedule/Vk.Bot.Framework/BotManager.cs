@@ -44,7 +44,7 @@ namespace Vk.Bot.Framework
         /// <param name="updateParser">List of update parsers for the bot</param>
         /// <param name="botOptions">Options used to configure the bot</param>
         /// <param name="logger"></param>
-        public BotManager(TBot bot, IVkApi vkApi, IUpdateParser<TBot> updateParser, IOptions<VkOptions<TBot>> botOptions, ILogger<BotManager<TBot>> logger = null)
+        public BotManager(TBot bot, IVkApi vkApi, IUpdateParser<TBot> updateParser, IOptions<VkOptions<TBot>> botOptions, ILogger<BotManager<TBot>> logger)
         {
             _bot = bot;
             _bot.VkApiClient = vkApi;
@@ -63,27 +63,25 @@ namespace Vk.Bot.Framework
         public async Task HandleUpdateAsync(GroupUpdate update)
         {
             if (update.Message != null)
-                _logger?.LogInformation("Incoming update: {0}", $"chatId: {update.Message?.UserId} // message: {update.Message?.Text}");
-            var anyHandlerExists = false;
+                _logger?.LogInformation("Incoming update: {0}", $"chatId: {update.Message?.FromId} // message: {update.Message?.Text}");
             try
             {
-                var handlers = _updateParser.FindHandlersForUpdate(_bot, update);
+                var handlers = _updateParser.FindHandlersForUpdate(_bot, update).ToList();
+
+                if (!handlers.Any())
+                {
+                    await _bot.HandleUnknownUpdate(update);
+                }
 
                 foreach (var handler in handlers)
                 {
-                    anyHandlerExists = true;
-
                     var result = await handler.HandleUpdateAsync(_bot, update);
                     if (result == UpdateHandlingResult.Handled)
                     {
                         return;
                     }
                 }
-
-                if (!anyHandlerExists)
-                {
-                    await _bot.HandleUnknownUpdate(update);
-                }
+                
             }
             catch (Exception e)
             {
