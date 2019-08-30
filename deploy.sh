@@ -6,7 +6,7 @@ DOCKER_USERNAME=$2
 DOCKER_PASSWORD=$3
 
 # Create publish artifact
-cd ./Schedule
+cd ./Schedule/Schedule
 dotnet publish -c Release -o ./output
 
 # Build the Docker images
