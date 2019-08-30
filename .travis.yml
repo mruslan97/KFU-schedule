@@ -3,5 +3,6 @@ dist: xenial
 mono: none
 dotnet: 2.2
 script:
+  - cd Schedule
   - dotnet restore
   - dotnet build
