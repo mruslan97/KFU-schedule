@@ -10,7 +10,7 @@ cd ./Schedule/Schedule
 dotnet publish -c Release -o ./output
 
 # Build the Docker images
-docker build -t mruslan97/kfuapp:$TAG ./output/.
+docker build -t mruslan97/kfuapp:$TAG ./
 docker tag mruslan97/kfuapp:$TAG mruslan97/kfuapp:latest
 
 # Login to Docker Hub and upload images
