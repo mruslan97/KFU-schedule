@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore;
@@ -61,6 +62,13 @@ namespace Storage.EFCore.Repository.Impl
             return entity;
         }
 
+        public IEnumerable<TEntity> AddRange(IEnumerable<TEntity> entities)
+        {
+            currentDbContext.AddRange(entities);
+
+            return entities;
+        }
+
         public TEntity Update(TEntity entity)
         {
             currentDbContext.Update(entity);
@@ -86,6 +94,13 @@ namespace Storage.EFCore.Repository.Impl
                 .Remove(entity);
 
             return entity;
+        }
+
+        public IQueryable<TEntity> DeleteRange(IQueryable<TEntity> entities)
+        {
+            currentDbContext.Set<TEntity>().RemoveRange(entities);
+
+            return entities;
         }
 
         public IQueryable<TEntity> SetUndeletable(

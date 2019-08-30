@@ -5,6 +5,9 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
+using Hangfire;
+using Hangfire.MemoryStorage;
+using Hangfire.PostgreSql;
 using JetBrains.Annotations;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -93,6 +96,7 @@ namespace Schedule
             //ervices.AddTransient<IQueryFetchDecorator, FilterQueryDecorator>();
             services.AddTransient<IQueryFetchDecorator, SearchQueryDecorator>();
             services.AddTransient<IQueryFetchDecorator, OrderByQueryDecorator>();
+            services.AddScoped<IUpdateService, UpdateService>();
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new Info { Title = "Kpfu schedule API", Version = "v1" });
@@ -106,7 +110,7 @@ namespace Schedule
             services.AddSingleton<IVkApi>(sp =>
             {
                 var api = new VkApi(services);
-                
+
                 api.Authorize(new ApiAuthParams
                 {
                     AccessToken = Configuration.GetSection("VkToken").Get<string>(),
@@ -132,6 +136,9 @@ namespace Schedule
                 .AddUpdateHandler<WeekCommand>()
                 .AddUpdateHandler<TeacherSearchCommand>()
                 .Configure();
+
+            services.AddHangfire(x => x.UseMemoryStorage());
+            
 
             return services.BuildDryIoc();
         }
@@ -159,7 +166,10 @@ namespace Schedule
             app.UseMvcWithDefaultRoute();
             app.UseSwagger();
             app.UseVkBot<KpfuBot>();
-            
+            app.UseHangfireDashboard();
+            app.UseHangfireServer();
+
+            RecurringJob.AddOrUpdate<IUpdateService>(u => u.UpdateLocaleStorage(), Cron.Daily);
             app.UseSwaggerUI(c =>
             {
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");

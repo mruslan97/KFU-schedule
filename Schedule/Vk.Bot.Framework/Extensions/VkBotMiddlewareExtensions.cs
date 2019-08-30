@@ -17,7 +17,7 @@ namespace Vk.Bot.Framework.Extensions
         public static IApplicationBuilder UseVkBot<TBot>(this IApplicationBuilder app)
             where TBot : BotBase<TBot>
         {
-            return app.UseMiddleware<TelegramBotMiddleware<TBot>>();
+            return app.UseMiddleware<BotMiddleware<TBot>>();
         }
 
         private static IBotManager<TBot> FindBotManager<TBot>(IApplicationBuilder app)

@@ -10,7 +10,6 @@ using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Schedule.Entities;
 using Schedule.Entities.Kpfu;
-using Schedule.Extensions;
 using Storage.Abstractions.UnitOfWork;
 using vm = Schedule.Models;
 
@@ -55,7 +54,7 @@ namespace Schedule.Services.Impl
                 var json = await response.Content.ReadAsStringAsync();
                 var groupsRoot = JsonConvert.DeserializeObject<KpfuGroupRoot>(json);
                 var groups = groupsRoot.Groups.Select(group => Mapper.Map<Group>(group)).ToList();
-                
+
                 using (var uow = UowFactory.Create())
                 {
                     groups.ForEach(x => Groups.Add(x));
@@ -96,7 +95,6 @@ namespace Schedule.Services.Impl
             using (var httpClient = HttpClientFactory.CreateClient())
             {
                 foreach (var group in groups)
-                {
                     try
                     {
                         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
@@ -118,8 +116,6 @@ namespace Schedule.Services.Impl
                         Logger.LogError($"Ошибка загрузки группы {group.GroupName}");
                         Logger.LogError(JsonConvert.SerializeObject(e));
                     }
-                    
-                }
 
                 using (var uow = UowFactory.Create())
                 {

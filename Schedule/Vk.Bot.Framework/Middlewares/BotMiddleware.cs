@@ -45,10 +45,8 @@ namespace Vk.Bot.Framework.Middlewares
         /// <param name="context"></param>
         public async Task Invoke(HttpContext context)
         {
-            if (!(
-                context.Request.Method == HttpMethods.Post &&
-                _botManager.WebhookUrl.EndsWith(context.Request.Path)
-                ))
+            if (_botManager.WebhookUrl == null || 
+                !_botManager.WebhookUrl.EndsWith(context.Request.Path))
             {
                 await _next.Invoke(context);
                 return;

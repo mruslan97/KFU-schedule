@@ -69,6 +69,18 @@ namespace Schedule.Services.Impl
             return Repository.Add(entity);
         }
 
+        public IEnumerable<TEntity> AddRange(IEnumerable<TEntity> entities)
+        {
+            var createdTime = DateTime.Now;
+            foreach (var entity in entities)
+            {
+                entity.Created = createdTime;
+            }
+
+            Repository.AddRange(entities);
+            return entities;
+        }
+
         /// <inheritdoc cref="IRepository{TEntity}.Update"/>
         /// <summary>
         ///    В поле DateChange фиксируется Дата изменения
@@ -153,6 +165,16 @@ namespace Schedule.Services.Impl
         public TEntity Delete(TEntity entity)
         {
             return Delete(entity.Id);
+        }
+
+        public IQueryable<TEntity> DeleteRange(IQueryable<TEntity> entities)
+        {
+            foreach (var entity in entities)
+            {
+                Delete(entity);
+            }
+
+            return entities;
         }
     }
 }

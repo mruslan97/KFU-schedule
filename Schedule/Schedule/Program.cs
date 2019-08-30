@@ -26,6 +26,7 @@ namespace Schedule
                     logging.SetMinimumLevel(LogLevel.Information);
                 })
                 .UseNLog()
+
                 .UseUrls("http://+:8443")
                 .UseStartup<Startup>();
     }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 using Storage.Abstractions.Interfaces;
@@ -42,6 +43,11 @@ namespace Storage.Abstractions.Repository
         /// <param name = "entity" > Добавляемая сущность </param>
         TEntity Add(TEntity entity);
 
+        /// <summary> Добавление коллекции </summary>
+        /// <param name="entities"></param>
+        /// <returns></returns>
+        IEnumerable<TEntity> AddRange(IEnumerable<TEntity> entities);
+
         /// <summary>
         ///     Обновление сущности
         /// </summary>
@@ -59,5 +65,7 @@ namespace Storage.Abstractions.Repository
         /// </summary>
         /// <param name = "entity" > Сущность </param>
         TEntity Delete(TEntity entity);
+
+        IQueryable<TEntity> DeleteRange(IQueryable<TEntity> entities);
     }
 }

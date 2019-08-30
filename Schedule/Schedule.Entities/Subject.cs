@@ -5,7 +5,7 @@ using Schedule.Entities.Enums;
 
 namespace Schedule.Entities
 {
-    public class Subject : DeletablePersistent
+    public class Subject : Persistent
     {
         public string Name { get; set; }
 
