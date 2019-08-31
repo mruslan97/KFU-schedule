@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/core/sdk:2.2.104 AS build-env
+FROM mcr.microsoft.com/dotnet/core/sdk:2.2 AS build-env
 WORKDIR /app
 
 # Copy csproj and restore as distinct layers
@@ -18,7 +18,7 @@ RUN dotnet build -c Release --no-restore
 RUN dotnet publish ./src/Schedule/Schedule.csproj -c Release -o /app/out --no-restore
 
 # Build runtime image
-microsoft/dotnet:2.2.104-aspnetcore-runtime
+FROM mcr.microsoft.com/dotnet/core/aspnet:2.2 AS runtime
 WORKDIR /app
 COPY --from=build-env /app/out/ .
 
