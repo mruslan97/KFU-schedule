@@ -113,8 +113,7 @@ namespace Schedule.Services.Impl
                     }
                     catch (Exception e)
                     {
-                        Logger.LogError($"Ошибка загрузки группы {group.GroupName}");
-                        Logger.LogError(JsonConvert.SerializeObject(e));
+                        Logger.LogError($"Ошибка загрузки группы {group.GroupName} {e.Message}");
                     }
 
                 using (var uow = UowFactory.Create())
