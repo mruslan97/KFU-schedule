@@ -1,0 +1,38 @@
+version: "3.2"
+services:  
+  kfuapp:
+    container_name: kfuapp
+    restart: always
+    image: index.docker.io/mruslan97/kfuapp:dev
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5000
+      - ConnectionStrings:Default=Server=pg;Port=5440;Database=schedule;User Id=postgres;Password=postgres;CommandTimeout=500;
+    volumes:
+      - ./data/api/appsettings.json:/app/appsettings.json      
+      - ./data/logs:/logs
+  
+  watchtower:
+    container_name: watchtower
+    restart: always
+    image: containrrr/watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /root/.docker/config.json:/config.json
+    command: watchtower kfuapp --interval 30  
+
+  pg:
+    container_name: pg
+    build:
+      context: "./"
+      dockerfile: "Dockerfile.pg"
+    restart: always
+    ports:
+      - 5440:5440
+    volumes:
+      - ./data/pg_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: postgres
+      LANG: en_US.UTF-8
+    command: postgres -c shared_buffers=1024MB -c shared_buffers=256MB -c temp_buffers=8MB -c work_mem=4MB -c maintenance_work_mem=64MB -c max_stack_depth=2MB
+
