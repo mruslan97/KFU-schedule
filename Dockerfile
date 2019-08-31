@@ -5,7 +5,6 @@ WORKDIR /app
 COPY projectfiles.tar .
 RUN tar -xvf projectfiles.tar && dotnet restore
 
-COPY ./test ./test
 COPY ./src ./src
 
 RUN dotnet build -c Release --no-restore
