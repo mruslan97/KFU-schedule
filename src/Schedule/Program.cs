@@ -23,11 +23,8 @@ namespace Schedule
                 .ConfigureLogging(logging =>
                 {
                     logging.ClearProviders();
-                    logging.SetMinimumLevel(LogLevel.Information);
                 })
                 .UseNLog()
-
-                .UseUrls("http://+:8443")
                 .UseStartup<Startup>();
     }
 }
