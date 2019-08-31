@@ -18,7 +18,7 @@ RUN dotnet build -c Release --no-restore
 RUN dotnet publish ./src/Schedule/Schedule.csproj -c Release -o /app/out --no-restore
 
 # Build runtime image
-FROM microsoft/dotnet:2.2.0-aspnetcore-runtime
+FROM mcr.microsoft.com/dotnet/core/runtime:2.2
 WORKDIR /app
 COPY --from=build-env /app/out/ .
 
