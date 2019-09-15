@@ -35,6 +35,24 @@ namespace Schedule.Services.Impl
 
         public async Task InitializeLocalStorage()
         {
+            try
+            {
+                Logger.LogInformation($"Выполняется очистка базы данных");
+                using (var uow = UowFactory.Create())
+                {
+                    Subjects.DeleteRange(Subjects.GetAll());
+                    Teachers.DeleteRange(Teachers.GetAll());
+                    Groups.DeleteRange(Groups.GetAll());
+
+                    uow.Commit();
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.LogError(JsonConvert.SerializeObject(e));
+            }
+            
+            Logger.LogInformation($"Очистка базы данных завершена");
             var groups = await GetGroups();
             Logger.LogInformation($"Загружено {groups.Count} групп");
             var teachers = await GetTeachers();

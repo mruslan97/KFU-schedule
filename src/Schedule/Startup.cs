@@ -162,7 +162,7 @@ namespace Schedule
             app.UseHangfireDashboard();
             app.UseHangfireServer();
 
-            //RecurringJob.AddOrUpdate<IUpdateService>(u => u.UpdateLocaleStorage(), Cron.Daily);
+            RecurringJob.AddOrUpdate<IUpdateService>(u => u.UpdateLocaleStorage(), Cron.Daily(2));
             app.UseSwaggerUI(c =>
             {
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
