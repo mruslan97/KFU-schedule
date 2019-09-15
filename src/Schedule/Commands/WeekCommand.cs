@@ -44,34 +44,33 @@ namespace Schedule.Commands
 
         public override async Task<UpdateHandlingResult> HandleCommand(GroupUpdate update)
         {
-            using (var uow = _uowFactory.Create())
+            var user = _users.GetAll().FirstOrDefault(x => x.UserId == update.Message.FromId);
+            var random = new Random();
+            if (user == null)
             {
-                var user = _users.GetAll().FirstOrDefault(x => x.UserId == update.Message.FromId);
-                var random = new Random();
-                if (user == null)
+                _vkApi.Messages.Send(new MessagesSendParams
                 {
-                    _vkApi.Messages.Send(new MessagesSendParams
-                    {
-                        UserId = update.Message.FromId,
-                        Message = $"Для начала работы введи команду старт или начать",
-                        PeerId = _options.Value.GroupId,
-                        RandomId = random.Next(int.MaxValue)
-                    });
-                    return UpdateHandlingResult.Handled;
-                }
-                var subjects = _subjects.GetAll().Where(x => x.GroupId == user.GroupId).ToList();
-                var daysOfWeek = subjects.OrderBy(x => x.DayOfWeek).Select(x => x.DayOfWeek).Distinct();
-                foreach (var day in daysOfWeek)
-                {
-                    _vkApi.Messages.Send(new MessagesSendParams
-                    {
-                        UserId = user.UserId,
-                        Message = subjects.Where(x => x.DayOfWeek == day).ToMessage((DayOfWeek)day),
-                        PeerId = _options.Value.GroupId,
-                        RandomId = random.Next(int.MaxValue),
-                    });
-                }
+                    UserId = update.Message.FromId,
+                    Message = $"Для начала работы введи команду старт или начать",
+                    PeerId = _options.Value.GroupId,
+                    RandomId = random.Next(int.MaxValue)
+                });
+                return UpdateHandlingResult.Handled;
             }
+
+            var subjects = _subjects.GetAll().Where(x => x.GroupId == user.GroupId).ToList();
+            var daysOfWeek = subjects.OrderBy(x => x.DayOfWeek).Select(x => x.DayOfWeek).Distinct();
+            foreach (var day in daysOfWeek)
+            {
+                _vkApi.Messages.Send(new MessagesSendParams
+                {
+                    UserId = user.UserId,
+                    Message = subjects.Where(x => x.DayOfWeek == day).ToMessage((DayOfWeek) day),
+                    PeerId = _options.Value.GroupId,
+                    RandomId = random.Next(int.MaxValue),
+                });
+            }
+
 
             return UpdateHandlingResult.Handled;
         }
