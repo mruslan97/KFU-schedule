@@ -95,7 +95,8 @@ namespace Schedule
             //ervices.AddTransient<IQueryFetchDecorator, FilterQueryDecorator>();
             services.AddTransient<IQueryFetchDecorator, SearchQueryDecorator>();
             services.AddTransient<IQueryFetchDecorator, OrderByQueryDecorator>();
-            services.AddScoped<IUpdateService, UpdateService>();
+            services.AddTransient<IUpdateService, UpdateService>();
+            services.AddTransient<IVkSenderService, VkSenderService>();
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new Info { Title = "Kpfu schedule API", Version = "v1" });

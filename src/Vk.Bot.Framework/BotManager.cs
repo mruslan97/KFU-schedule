@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Vk.Bot.Framework.Abstractions;
 using VkNet.Abstractions;
+using VkNet.Enums.SafetyEnums;
 using VkNet.Model;
 using VkNet.Model.GroupUpdate;
 
@@ -62,30 +63,33 @@ namespace Vk.Bot.Framework
         /// <returns></returns>
         public async Task HandleUpdateAsync(GroupUpdate update)
         {
-            if (update.Message != null)
-                _logger?.LogInformation("Incoming update: {0}", $"chatId: {update.Message?.FromId} // message: {update.Message?.Text}");
-            try
+            if (update.Message != null && update.Type == GroupUpdateType.MessageNew)
             {
-                var handlers = _updateParser.FindHandlersForUpdate(_bot, update).ToList();
-
-                if (!handlers.Any())
+                _logger?.LogInformation("Incoming update: {0}",
+                    $"chatId: {update.Message?.FromId} // message: {update.Message?.Text}");
+                try
                 {
-                    await _bot.HandleUnknownUpdate(update);
-                }
+                    var handlers = _updateParser.FindHandlersForUpdate(_bot, update).ToList();
 
-                foreach (var handler in handlers)
-                {
-                    var result = await handler.HandleUpdateAsync(_bot, update);
-                    if (result == UpdateHandlingResult.Handled)
+                    if (!handlers.Any())
                     {
-                        return;
+                        await _bot.HandleUnknownUpdate(update);
                     }
+
+                    foreach (var handler in handlers)
+                    {
+                        var result = await handler.HandleUpdateAsync(_bot, update);
+                        if (result == UpdateHandlingResult.Handled)
+                        {
+                            return;
+                        }
+                    }
+
                 }
-                
-            }
-            catch (Exception e)
-            {
-                await _bot.HandleFaultedUpdate(update, e);
+                catch (Exception e)
+                {
+                    await _bot.HandleFaultedUpdate(update, e);
+                }
             }
         }
     }

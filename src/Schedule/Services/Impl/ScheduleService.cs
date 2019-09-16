@@ -10,6 +10,7 @@ using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Schedule.Entities;
 using Schedule.Entities.Kpfu;
+using Schedule.Extensions;
 using Storage.Abstractions.UnitOfWork;
 using vm = Schedule.Models;
 
@@ -72,14 +73,8 @@ namespace Schedule.Services.Impl
                 var json = await response.Content.ReadAsStringAsync();
                 var groupsRoot = JsonConvert.DeserializeObject<KpfuGroupRoot>(json);
                 var groups = groupsRoot.Groups.Select(group => Mapper.Map<Group>(group)).ToList();
-
-                using (var uow = UowFactory.Create())
-                {
-                    groups.ForEach(x => Groups.Add(x));
-
-                    uow.Commit();
-                }
-
+                groups.ForEach(x => UowFactory.Transaction(() => { Groups.Add(x); }));
+                
                 return Groups.GetAll().ToList();
             }
         }
@@ -95,14 +90,8 @@ namespace Schedule.Services.Impl
                 var json = await response.Content.ReadAsStringAsync();
                 var teacherRoot = JsonConvert.DeserializeObject<KpfuTeacherRoot>(json);
                 var teachers = teacherRoot.Teachers.Select(group => Mapper.Map<Teacher>(group)).ToList();
-
-                using (var uow = UowFactory.Create())
-                {
-                    teachers.ForEach(x => Teachers.Add(x));
-
-                    uow.Commit();
-                }
-
+                teachers.ForEach(x => UowFactory.Transaction(() => { Teachers.Add(x); }));
+                
                 return teachers;
             }
         }
@@ -133,14 +122,9 @@ namespace Schedule.Services.Impl
                     {
                         Logger.LogError($"Ошибка загрузки группы {group.GroupName} {e.Message}");
                     }
-
-                using (var uow = UowFactory.Create())
-                {
-                    allSubjects.ForEach(x => Subjects.Add(x));
-
-                    uow.Commit();
-                }
-
+                //allSubjects.ForEach(x => UowFactory.Transaction(() => { Subjects.Add(x); }));
+                UowFactory.Transaction((() => Subjects.AddRange(allSubjects)));
+                
                 return allSubjects;
             }
         }

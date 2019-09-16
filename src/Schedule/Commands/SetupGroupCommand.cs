@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 using Schedule.Entities;
 using Schedule.Entities.Enums;
 using Schedule.Extensions;
@@ -31,15 +33,21 @@ namespace Schedule.Commands
 
         private IOptions<VkOptions<KpfuBot>> _options;
 
+        private IVkSenderService _vkSenderService;
+
+        private ILogger<SetupGroupCommand> _logger;
+
         public SetupGroupCommand(IVkApi vkApi, IOptions<VkOptions<KpfuBot>> options, 
             ITimespanRepository<VkUser> users, IUnitOfWorkFactory uowFactory, 
-            ITimespanRepository<Group> groups) : base("старт")
+            ITimespanRepository<Group> groups, IVkSenderService vkSenderService, ILogger<SetupGroupCommand> logger) : base("старт")
         {
             _vkApi = vkApi;
             _options = options;
             _users = users;
             _uowFactory = uowFactory;
             _groups = groups;
+            _vkSenderService = vkSenderService;
+            _logger = logger;
         }
 
         public override bool CanHandleUpdate(IBot bot, GroupUpdate update)
@@ -51,33 +59,42 @@ namespace Schedule.Commands
         {
             using (var uow = _uowFactory.Create())
             {
-                var user = _users.GetAll().FirstOrDefault(x => x.UserId == update.Message.FromId);
-                var random = new Random();
-                if (user == null)
+                try
                 {
+                    var user = _users.GetAll().FirstOrDefault(x => x.UserId == update.Message.FromId);
+                    var random = new Random();
+                    if (user == null)
+                    {
+                        _vkApi.Messages.Send(new MessagesSendParams
+                        {
+                            UserId = update.Message.FromId,
+                            Message = $"Для начала работы введи команду старт или начать",
+                            PeerId = _options.Value.GroupId,
+                            RandomId = random.Next(int.MaxValue)
+                        });
+                        return UpdateHandlingResult.Handled;
+                    }
+
+                    user.Group = _groups.GetAll().FirstOrDefault(x => update.Message.Text.Contains(x.GroupName));
+                    user.ChatState = ChatState.MainMenu;
+                    _users.Update(user);
+                    uow.Commit();
                     _vkApi.Messages.Send(new MessagesSendParams
                     {
-                        UserId = update.Message.FromId,
-                        Message = $"Для начала работы введи команду старт или начать",
+                        UserId = user.UserId,
+                        Message = $"Группа успешно сохранена.",
                         PeerId = _options.Value.GroupId,
-                        RandomId = random.Next(int.MaxValue)
+                        RandomId = random.Next(int.MaxValue),
+                        Keyboard = MessageDecorator.BuildMainMenu()
                     });
+                }
+                catch (Exception e)
+                {
+                    _logger.LogError($"Произошла ошибка в {nameof(HandleCommand)}, {JsonConvert.SerializeObject(e)}");
+                    uow.Rollback();
+                    await _vkSenderService.SendError((long)update.Message.UserId);
                     return UpdateHandlingResult.Handled;
                 }
-
-                user.Group = _groups.GetAll().FirstOrDefault(x => update.Message.Text.Contains(x.GroupName));
-                user.ChatState = ChatState.MainMenu;
-                _users.Update(user);
-                uow.Commit();
-                _vkApi.Messages.Send(new MessagesSendParams
-                {
-                    UserId = user.UserId,
-                    Message = $"Группа успешно сохранена.",
-                    PeerId = _options.Value.GroupId,
-                    RandomId = random.Next(int.MaxValue),
-                    Keyboard = MessageDecorator.BuildMainMenu()
-                });
-                
             }
 
             return UpdateHandlingResult.Handled;
