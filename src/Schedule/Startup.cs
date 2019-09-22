@@ -9,6 +9,7 @@ using Hangfire;
 using Hangfire.MemoryStorage;
 using Hangfire.PostgreSql;
 using JetBrains.Annotations;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -69,9 +70,9 @@ namespace Schedule
                 .AddEnvironmentVariables();
             Configuration = builder.Build();
 
-            //var culture = Configuration.GetValue<string>("DefaultCulture");
+            var culture = Configuration.GetValue<string>("DefaultCulture");
 
-            //CultureInfo.CurrentCulture = new CultureInfo(culture);
+            CultureInfo.CurrentCulture = new CultureInfo(culture);
         }
 
 
@@ -81,6 +82,14 @@ namespace Schedule
         public IServiceProvider ConfigureServices(IServiceCollection services)
         {
             services.AddScoped(typeof(ITimespanRepository<>), typeof(TimespanRepository<>));
+            services.AddTransient<IAuthorizationHandler, ApiKeyRequirementHandler>();
+            services.AddAuthorization(authConfig =>
+            {
+                authConfig.AddPolicy("ApiKeyPolicy",
+                    policyBuilder => policyBuilder
+                        .AddRequirements(new ApiKeyRequirement(new [] { Configuration.GetSection("ApiKey").Get<string>() })));
+                
+            });
             services.AddMvc()
                 .AddControllersAsServices()
                 .SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
@@ -97,6 +106,7 @@ namespace Schedule
             services.AddTransient<IQueryFetchDecorator, OrderByQueryDecorator>();
             services.AddTransient<IUpdateService, UpdateService>();
             services.AddTransient<IVkSenderService, VkSenderService>();
+            
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new Info { Title = "Kpfu schedule API", Version = "v1" });
@@ -106,6 +116,7 @@ namespace Schedule
                     c.IncludeXmlComments(comment, true);
                 }
             });
+            
 
             services.AddSingleton<IVkApi>(sp =>
             {

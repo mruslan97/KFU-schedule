@@ -3,7 +3,7 @@ using Schedule.Entities.Abstract;
 
 namespace Schedule.Entities
 {
-    public class Teacher : DeletablePersistent
+    public class Teacher : Persistent
     {
         public long KpfuId { get; set; }
         

@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Schedule.Extensions;
@@ -75,7 +76,7 @@ namespace Schedule.Controllers.Base
 
         /// <summary> Создание </summary>
         /// <param name="dto"> Модель сущности </param>
-        [HttpPost(Order = 100)]
+        [HttpPost(Order = 100), Authorize(Policy = "ApiKeyPolicy")]
         public virtual async Task<TDto> Add([FromBody] TDto dto)
         {
             var entity = Mapper.Map<TEntity>(dto);
@@ -87,7 +88,7 @@ namespace Schedule.Controllers.Base
 
         /// <summary> Обновление </summary>
         /// <param name="dto"> Модель сущности </param>
-        [HttpPut(Order = 100)]
+        [HttpPut(Order = 100), Authorize(Policy = "ApiKeyPolicy")]
         public virtual async Task<TDto> Update([FromBody] TDto dto)
         {
             using (var uow = UowFactory.Create())
@@ -107,7 +108,7 @@ namespace Schedule.Controllers.Base
 
         /// <summary> Удаление </summary>
         /// <param name="id"> Идентификатор сущности </param>
-        [HttpDelete("{id}", Order = 100)]
+        [HttpDelete("{id}", Order = 100), Authorize(Policy = "ApiKeyPolicy")]
         public virtual async Task<TDto> Delete([FromRoute] long id)
         {
             TEntity entity = null;
