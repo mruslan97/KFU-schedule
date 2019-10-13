@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using FluentDateTime;
 using Microsoft.Extensions.Options;
 using Schedule.Entities;
 using Schedule.Extensions;
@@ -58,7 +59,11 @@ namespace Schedule.Commands
                 return UpdateHandlingResult.Handled;
             }
 
-            var subjects = _subjects.GetAll().Where(x => x.GroupId == user.GroupId).ToList();
+            var monday = DateTime.Now.Previous(DayOfWeek.Monday);
+            var sunday = DateTime.Now.Previous(DayOfWeek.Sunday);
+            var subjects = _subjects.GetAll().Where(x => x.GroupId == user.GroupId 
+                                                         && x.StartDay.Value <= monday
+                                                         && x.EndDay.Value >= sunday).ToList();
             var daysOfWeek = subjects.OrderBy(x => x.DayOfWeek).Select(x => x.DayOfWeek).Distinct();
             foreach (var day in daysOfWeek)
             {

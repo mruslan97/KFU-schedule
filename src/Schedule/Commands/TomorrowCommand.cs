@@ -59,7 +59,10 @@ namespace Schedule.Commands
             }
 
             var dayOfWeek = DateTime.Now.DayOfWeek == (DayOfWeek) 6 ? 1 : (int) DateTime.Now.DayOfWeek + 1;
-            var subjects = _subjects.GetAll().Where(x => x.GroupId == user.GroupId && x.DayOfWeek == dayOfWeek)
+            var subjects = _subjects.GetAll().Where(x => x.GroupId == user.GroupId 
+                                                         && x.DayOfWeek == dayOfWeek
+                                                         && x.StartDay.Value <= DateTime.Today
+                                                         && x.EndDay.Value >= DateTime.Today)
                 .ToList();
 
             _vkApi.Messages.Send(new MessagesSendParams
