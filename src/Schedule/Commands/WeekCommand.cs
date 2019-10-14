@@ -1,15 +1,19 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentDateTime;
 using Microsoft.Extensions.Options;
 using Schedule.Entities;
+using Schedule.Entities.Enums;
 using Schedule.Extensions;
 using Schedule.Services;
 using Storage.Abstractions.UnitOfWork;
 using Vk.Bot.Framework;
 using Vk.Bot.Framework.Abstractions;
 using VkNet.Abstractions;
+using VkNet.Enums.SafetyEnums;
+using VkNet.Model.Attachments;
 using VkNet.Model.GroupUpdate;
 using VkNet.Model.RequestParams;
 
@@ -27,15 +31,26 @@ namespace Schedule.Commands
         private IVkApi _vkApi;
 
         private IOptions<VkOptions<KpfuBot>> _options;
+        
+        private IObjectStorageService _storageService;
+
+        private IVkSenderService _vkSenderService;
 
         public WeekCommand(ITimespanRepository<Subject> subjects,
-            ITimespanRepository<VkUser> users, IUnitOfWorkFactory uowFactory, IVkApi vkApi, IOptions<VkOptions<KpfuBot>> options) : base("На неделю")
+            ITimespanRepository<VkUser> users, 
+            IUnitOfWorkFactory uowFactory, 
+            IVkApi vkApi, 
+            IOptions<VkOptions<KpfuBot>> options, 
+            IObjectStorageService storageService, 
+            IVkSenderService vkSenderService) : base("На неделю")
         {
             _subjects = subjects;
             _users = users;
             _uowFactory = uowFactory;
             _vkApi = vkApi;
             _options = options;
+            _storageService = storageService;
+            _vkSenderService = vkSenderService;
         }
 
         public override bool CanHandleUpdate(IBot bot, GroupUpdate update)
@@ -43,7 +58,7 @@ namespace Schedule.Commands
             return update.Message != null && update.Message.Text.ToLower().Contains("неделю");
         }
 
-        public override async Task<UpdateHandlingResult> HandleCommand(GroupUpdate update)
+        public override Task<UpdateHandlingResult> HandleCommand(GroupUpdate update)
         {
             var user = _users.GetAll().FirstOrDefault(x => x.UserId == update.Message.FromId);
             var random = new Random();
@@ -56,28 +71,64 @@ namespace Schedule.Commands
                     PeerId = _options.Value.GroupId,
                     RandomId = random.Next(int.MaxValue)
                 });
-                return UpdateHandlingResult.Handled;
+                return Task.FromResult(UpdateHandlingResult.Handled);
             }
 
-            var monday = DateTime.Now.Previous(DayOfWeek.Monday);
-            var sunday = DateTime.Now.Previous(DayOfWeek.Sunday);
-            var subjects = _subjects.GetAll().Where(x => x.GroupId == user.GroupId 
-                                                         && x.StartDay.Value <= monday
-                                                         && x.EndDay.Value >= sunday).ToList();
-            var daysOfWeek = subjects.OrderBy(x => x.DayOfWeek).Select(x => x.DayOfWeek).Distinct();
-            foreach (var day in daysOfWeek)
+            if (user.ScheduleType == ScheduleType.Text)
             {
-                _vkApi.Messages.Send(new MessagesSendParams
+
+                var monday = DateTime.Now.Previous(DayOfWeek.Monday);
+                var sunday = DateTime.Now.Previous(DayOfWeek.Sunday);
+                var subjects = _subjects.GetAll().Where(x => x.GroupId == user.GroupId
+                                                             && x.StartDay.Value <= monday
+                                                             && x.EndDay.Value >= sunday).ToList();
+                var daysOfWeek = subjects.OrderBy(x => x.DayOfWeek).Select(x => x.DayOfWeek).Distinct();
+                foreach (var day in daysOfWeek)
                 {
-                    UserId = user.UserId,
-                    Message = subjects.Where(x => x.DayOfWeek == day).ToMessage((DayOfWeek) day),
-                    PeerId = _options.Value.GroupId,
-                    RandomId = random.Next(int.MaxValue),
+                    _vkApi.Messages.Send(new MessagesSendParams
+                    {
+                        UserId = user.UserId,
+                        Message = subjects.Where(x => x.DayOfWeek == day).ToMessage((DayOfWeek) day),
+                        PeerId = _options.Value.GroupId,
+                        RandomId = random.Next(int.MaxValue),
+                    });
+                }
+            }
+            else
+            {
+                var uploadServer = _vkApi.Photo.GetMessagesUploadServer(user.UserId);
+                var images = new List<MediaAttachment>();
+           
+                // Отправляем в background для избежания дублей, потому что вк требует быстрого ответа.
+                Task.Run(async () =>
+                {
+                    _vkApi.Messages.SetActivity(update.Message.FromId.ToString(), 
+                        MessageActivityType.Typing, 
+                        update.Message.FromId, 
+                        (ulong)_options.Value.GroupId );
+                
+                    for (var i = 1; i <= 6; i++)
+                    {
+                        var image = await _storageService.GetDay(user.Group.GroupName, i);
+
+                        var response = await _vkSenderService.UploadImage(uploadServer.UploadUrl, image.ToArray());
+                        var photo = _vkApi.Photo.SaveMessagesPhoto(response).SingleOrDefault();
+                        images.Add(photo);
+
+                    }
+
+                    _vkApi.Messages.Send(new MessagesSendParams
+                    {
+                        UserId = update.Message.FromId,
+                        PeerId = _options.Value.GroupId,
+                        Attachments = images,
+                        RandomId = random.Next(int.MaxValue)
+                    });
                 });
             }
 
 
-            return UpdateHandlingResult.Handled;
+            return Task.FromResult(UpdateHandlingResult.Handled);
         }
     }
 }

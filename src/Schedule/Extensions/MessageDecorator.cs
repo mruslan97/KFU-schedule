@@ -88,12 +88,24 @@ namespace Schedule.Extensions
         {
             var keyboardBuilder = new MessageKeyboardBuilder();
             keyboardBuilder.AddButton("На сегодня", "", KeyboardButtonColor.Primary, "");
-            keyboardBuilder.Line();
             keyboardBuilder.AddButton("На завтра", "", KeyboardButtonColor.Primary, "");
             keyboardBuilder.Line();
             keyboardBuilder.AddButton("На неделю", "", KeyboardButtonColor.Primary, "");
             keyboardBuilder.Line();
             keyboardBuilder.AddButton("Поиск преподавателя 🔎", "", KeyboardButtonColor.Positive, "");
+            keyboardBuilder.Line();
+            keyboardBuilder.AddButton("Настройки 🛠", "", KeyboardButtonColor.Positive, "");
+
+            return keyboardBuilder.Get();
+        }
+        
+        public static MessageKeyboard BuildSettingsMenu()
+        {
+            var keyboardBuilder = new MessageKeyboardBuilder();
+            keyboardBuilder.AddButton("Текст 🔡", "", KeyboardButtonColor.Primary, "set_button_text");
+            keyboardBuilder.AddButton("Картинка 🏞", "", KeyboardButtonColor.Primary, "set_button_picture");
+            keyboardBuilder.Line();
+            keyboardBuilder.AddButton("Назад 🔙", "", KeyboardButtonColor.Default, "");
 
             return keyboardBuilder.Get();
         }

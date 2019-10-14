@@ -18,10 +18,10 @@ namespace Schedule.Controllers
     public class VkController : Controller
     {
         [HttpPost]
-        public async Task<IActionResult> ReceiveMessage([FromBody] JToken body)
+        public Task<IActionResult> ReceiveMessage([FromBody] JToken body)
         {
 
-            return Ok("");
+            return Task.FromResult<IActionResult>(Ok(""));
         }
     }
 }

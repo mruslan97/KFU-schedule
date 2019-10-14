@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -8,23 +7,19 @@ using Newtonsoft.Json;
 using Schedule.Entities;
 using Schedule.Entities.Enums;
 using Schedule.Extensions;
-using Schedule.Models;
 using Schedule.Services;
 using Storage.Abstractions.UnitOfWork;
 using Vk.Bot.Framework;
 using Vk.Bot.Framework.Abstractions;
 using VkNet.Abstractions;
-using VkNet.Enums.SafetyEnums;
 using VkNet.Model.GroupUpdate;
 using VkNet.Model.RequestParams;
 
 namespace Schedule.Commands
 {
-    public class SetupGroupCommand : CommandBase<DefaultCommandArgs>
+    public class ChangeScheduleFormatCommand : CommandBase<DefaultCommandArgs>
     {
         private ITimespanRepository<VkUser> _users;
-
-        private ITimespanRepository<Group> _groups;
 
         /// <summary> паттерн uow </summary>
         private IUnitOfWorkFactory _uowFactory;
@@ -35,24 +30,25 @@ namespace Schedule.Commands
 
         private IVkSenderService _vkSenderService;
 
-        private ILogger<SetupGroupCommand> _logger;
+        private ILogger<MainMenuCommand> _logger;
 
-        public SetupGroupCommand(IVkApi vkApi, IOptions<VkOptions<KpfuBot>> options, 
+        public ChangeScheduleFormatCommand(
             ITimespanRepository<VkUser> users, IUnitOfWorkFactory uowFactory, 
-            ITimespanRepository<Group> groups, IVkSenderService vkSenderService, ILogger<SetupGroupCommand> logger) : base("старт")
+            IVkApi vkApi, IOptions<VkOptions<KpfuBot>> options, 
+            IVkSenderService vkSenderService, 
+            ILogger<MainMenuCommand> logger) : base("картинка")
         {
-            _vkApi = vkApi;
-            _options = options;
             _users = users;
             _uowFactory = uowFactory;
-            _groups = groups;
+            _vkApi = vkApi;
+            _options = options;
             _vkSenderService = vkSenderService;
             _logger = logger;
         }
-
+        
         public override bool CanHandleUpdate(IBot bot, GroupUpdate update)
         {
-            return _groups.GetAll().Any(x => update.Message.Text.Contains(x.GroupName));
+            return update.Message != null && update.Message.Payload.Contains("set_button", StringComparison.InvariantCultureIgnoreCase);
         }
 
         public override async Task<UpdateHandlingResult> HandleCommand(GroupUpdate update)
@@ -75,14 +71,15 @@ namespace Schedule.Commands
                         return UpdateHandlingResult.Handled;
                     }
 
-                    user.Group = _groups.GetAll().FirstOrDefault(x => update.Message.Text.Contains(x.GroupName));
-                    user.ChatState = ChatState.MainMenu;
+                    user.ScheduleType = update.Message.Text.Contains("картинка", StringComparison.InvariantCultureIgnoreCase)
+                        ? ScheduleType.Image
+                        : ScheduleType.Text;
                     _users.Update(user);
                     uow.Commit();
                     _vkApi.Messages.Send(new MessagesSendParams
                     {
                         UserId = user.UserId,
-                        Message = $"Группа успешно сохранена. В настройках можно выбрать формат расписания.",
+                        Message = $"Новый формат {update.Message.Text} успешно сохранен.",
                         PeerId = _options.Value.GroupId,
                         RandomId = random.Next(int.MaxValue),
                         Keyboard = MessageDecorator.BuildMainMenu()

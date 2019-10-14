@@ -35,7 +35,10 @@ namespace Schedule.Commands
         private ILogger<MainMenuCommand> _logger;
 
         public MainMenuCommand(ITimespanRepository<Subject> subjects,
-            ITimespanRepository<VkUser> users, IUnitOfWorkFactory uowFactory, IVkApi vkApi, IOptions<VkOptions<KpfuBot>> options, IVkSenderService vkSenderService, ILogger<MainMenuCommand> logger) : base("Назад")
+            ITimespanRepository<VkUser> users, IUnitOfWorkFactory uowFactory, 
+            IVkApi vkApi, IOptions<VkOptions<KpfuBot>> options, 
+            IVkSenderService vkSenderService, 
+            ILogger<MainMenuCommand> logger) : base("Назад")
         {
             _subjects = subjects;
             _users = users;

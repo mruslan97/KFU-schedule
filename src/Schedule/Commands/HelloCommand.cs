@@ -64,7 +64,8 @@ namespace Schedule.Commands
                             ChatState = ChatState.GroupInput,
                             UserId = (long) update.Message.FromId,
                             FirstName = vkUser.FirstName,
-                            LastName = vkUser.LastName
+                            LastName = vkUser.LastName,
+                            ScheduleType = ScheduleType.Image
                         };
                         if (!_users.GetAll().Any(x => x.UserId == update.Message.FromId))
                         {

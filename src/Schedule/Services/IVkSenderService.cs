@@ -13,5 +13,13 @@ namespace Schedule.Services
         /// <param name="userId"></param>
         /// <returns></returns>
         Task SendError(long userId);
+
+        /// <summary>
+        /// Загрузить изображение на сервера вк
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        Task<string> UploadImage(string url, byte[] data);
     }
 }

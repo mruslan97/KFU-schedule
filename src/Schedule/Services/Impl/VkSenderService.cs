@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -23,6 +26,8 @@ namespace Schedule.Services.Impl
         
         public ILogger<VkSenderService> Logger { get; set; }
         
+        public IHttpClientFactory HttpClientFactory { get; set; }
+        
         public Task SendError(long userId)
         {
             try
@@ -41,6 +46,21 @@ namespace Schedule.Services.Impl
             {
                 Logger.LogError($"Ошибка при отправке error сообщения {JsonConvert.SerializeObject(e)}");
                 return Task.CompletedTask;
+            }
+        }
+
+        public async Task<string> UploadImage(string url, byte[] data)
+        {
+            using (var client = HttpClientFactory.CreateClient())
+            {
+                var requestContent = new MultipartFormDataContent();
+                var imageContent = new ByteArrayContent(data);
+                imageContent.Headers.ContentType = MediaTypeHeaderValue.Parse("image/jpeg");
+                requestContent.Add(imageContent, "photo", "image.png");
+                var encoding = CodePagesEncodingProvider.Instance.GetEncoding(1251);
+                var response = await client.PostAsync(url, requestContent);
+                var bytes = await response.Content.ReadAsByteArrayAsync();
+                return encoding.GetString(bytes, 0, bytes.Length);
             }
         }
     }
