@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
+using RestSharp.Extensions;
 using Schedule.Entities;
 using Schedule.Entities.Enums;
 using Schedule.Extensions;
@@ -48,7 +49,8 @@ namespace Schedule.Commands
         
         public override bool CanHandleUpdate(IBot bot, GroupUpdate update)
         {
-            return update.Message != null && update.Message.Payload.Contains("set_button", StringComparison.InvariantCultureIgnoreCase);
+            return update.Message != null && update.Message.Payload != null 
+                                          && update.Message.Payload.Contains("set_button", StringComparison.InvariantCultureIgnoreCase);
         }
 
         public override async Task<UpdateHandlingResult> HandleCommand(GroupUpdate update)
