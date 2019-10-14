@@ -100,12 +100,13 @@ namespace Schedule
                     .EnableSensitiveDataLogging());
             services.AddHttpClient();
             services.Configure<DomainOptions>(Configuration.GetSection(nameof(DomainOptions)));
+            services.Configure<StorageOptions>(Configuration.GetSection(nameof(StorageOptions)));
             services.AddTransient<IScheduleService, ScheduleService>();
-            //ervices.AddTransient<IQueryFetchDecorator, FilterQueryDecorator>();
             services.AddTransient<IQueryFetchDecorator, SearchQueryDecorator>();
             services.AddTransient<IQueryFetchDecorator, OrderByQueryDecorator>();
             services.AddTransient<IUpdateService, UpdateService>();
             services.AddTransient<IVkSenderService, VkSenderService>();
+            services.AddTransient<IObjectStorageService, ObjectStorageService>();
             
             services.AddSwaggerGen(c =>
             {
@@ -138,7 +139,6 @@ namespace Schedule
             });
             services.AddSingleton(mappingConfig.CreateMapper());
             services.AddVkBot<KpfuBot>(Configuration.GetSection("VkOptions"))
-                //.AddUpdateHandler<HelpCommand>()
                 .AddUpdateHandler<MainMenuCommand>()
                 .AddUpdateHandler<HelloCommand>()
                 .AddUpdateHandler<SetupGroupCommand>()
@@ -146,6 +146,8 @@ namespace Schedule
                 .AddUpdateHandler<TomorrowCommand>()
                 .AddUpdateHandler<WeekCommand>()
                 .AddUpdateHandler<TeacherSearchCommand>()
+                .AddUpdateHandler<SettingsCommand>()
+                .AddUpdateHandler<ChangeScheduleFormatCommand>()
                 .Configure();
 
             services.AddHangfire(x => x.UseMemoryStorage());
