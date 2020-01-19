@@ -41,8 +41,10 @@ namespace Schedule.Services.Impl
                     try
                     {
                         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+                        // Конвертируем в unicode для совместимости с русскими символами
+                        var unicodeGroupName = string.Concat(group.GroupName.Select(c => $@"\u{(int)c:x4}"));
                         var response = await httpClient.GetAsync(
-                            $"{Options.Value.KpfuHost}/e-ksu/portal_pg_mobile.get_schedule?p_name_group={group.GroupName}&p_stud_year={Options.Value.Year}&p_stud_semester={Options.Value.Semester}");
+                            $"{Options.Value.KpfuHost}/e-ksu/portal_pg_mobile.get_schedule?p_name_group={unicodeGroupName}&p_stud_year={Options.Value.Year}&p_stud_semester={Options.Value.Semester}");
                         var json = await response.Content.ReadAsStringAsync();
                         var subjectRoot = JsonConvert.DeserializeObject<KpfuSubjectRoot>(json);
                         var subjects = subjectRoot.Subjects.Select(subject => Mapper.Map<Subject>(subject)).ToList();
@@ -57,6 +59,11 @@ namespace Schedule.Services.Impl
                             Subjects.AddRange(subjects);
                             uow.Commit();
                         }
+                    }
+                    catch (JsonReaderException e)
+                    {
+                        Logger.LogError($"Невалидный json, группа {group.GroupName} {e.Message}");
+                        Logger.LogError(JsonConvert.SerializeObject(e));
                     }
                     catch (Exception e)
                     {

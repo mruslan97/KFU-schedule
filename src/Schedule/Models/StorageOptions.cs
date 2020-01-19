@@ -10,5 +10,7 @@ namespace Schedule.Models
         public string AccessKey { get; set; }
         
         public string SecretKey { get; set; }
+        
+        public bool UseSsl { get; set; }
     }
 }

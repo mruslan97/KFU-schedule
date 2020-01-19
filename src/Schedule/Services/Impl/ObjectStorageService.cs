@@ -16,7 +16,9 @@ namespace Schedule.Services.Impl
         public ObjectStorageService(IOptions<StorageOptions> options)
         {
             _options = options.Value;
-            _minioClient = new MinioClient(_options.Host, _options.AccessKey, _options.SecretKey);
+            _minioClient = _options.UseSsl ? 
+                new MinioClient(_options.Host, _options.AccessKey, _options.SecretKey).WithSSL() 
+                : new MinioClient(_options.Host, _options.AccessKey, _options.SecretKey);
         }
 
         public async Task<IEnumerable<byte>> GetDay(string group, int day)
