@@ -80,8 +80,8 @@ namespace Schedule.Commands
                 var monday = DateTime.Now.Previous(DayOfWeek.Monday);
                 var sunday = DateTime.Now.Previous(DayOfWeek.Sunday);
                 var subjects = _subjects.GetAll().Where(x => x.GroupId == user.GroupId
-                                                             && x.StartDay.Value <= monday
-                                                             && x.EndDay.Value >= sunday).ToList();
+                    //&& x.StartDay.Value <= monday
+                ).ToList();//&& x.EndDay.Value >= sunday).ToList(); TODO uncomment 11.02 
                 var daysOfWeek = subjects.OrderBy(x => x.DayOfWeek).Select(x => x.DayOfWeek).Distinct();
                 foreach (var day in daysOfWeek)
                 {

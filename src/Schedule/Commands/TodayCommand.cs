@@ -97,7 +97,7 @@ namespace Schedule.Commands
                 {
                     var subjects = _subjects.GetAll().Where(x => x.GroupId == user.GroupId
                                                                  && x.DayOfWeek == dayOfWeek
-                                                                 && x.StartDay.Value <= DateTime.Today
+                                                                 //&& x.StartDay.Value <= DateTime.Today TODO uncomment 11.02 
                                                                  && x.EndDay.Value >= DateTime.Today).ToList();
                     _vkApi.Messages.Send(new MessagesSendParams
                     {
