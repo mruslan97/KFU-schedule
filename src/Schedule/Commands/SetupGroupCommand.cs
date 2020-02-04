@@ -82,7 +82,7 @@ namespace Schedule.Commands
                     _vkApi.Messages.Send(new MessagesSendParams
                     {
                         UserId = user.UserId,
-                        Message = $"Группа успешно сохранена. В настройках можно выбрать формат расписания.",
+                        Message = $"Группа успешно сохранена. В настройках можно выбрать формат расписания, текст или картинка.",
                         PeerId = _options.Value.GroupId,
                         RandomId = random.Next(int.MaxValue),
                         Keyboard = MessageDecorator.BuildMainMenu()
