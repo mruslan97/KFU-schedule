@@ -65,7 +65,7 @@ namespace Schedule.Commands
                             UserId = (long) update.Message.FromId,
                             FirstName = vkUser.FirstName,
                             LastName = vkUser.LastName,
-                            ScheduleType = ScheduleType.Image
+                            ScheduleType = ScheduleType.Text
                         };
                         if (!_users.GetAll().Any(x => x.UserId == update.Message.FromId))
                         {
