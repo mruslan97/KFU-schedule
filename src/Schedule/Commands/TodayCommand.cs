@@ -99,9 +99,7 @@ namespace Schedule.Commands
                                                                  && x.DayOfWeek == dayOfWeek
                                                                  //&& x.StartDay.Value <= DateTime.Today TODO uncomment 11.02 
                                                                  && x.EndDay.Value >= DateTime.Today).ToList();
-                    
-                    _logger.LogWarning($"day: {dayOfWeek} {dayOfWeek.ToString()} subjects: {subjects.Count}");
-                    
+
                     _vkApi.Messages.Send(new MessagesSendParams
                     {
                         UserId = user.UserId,
