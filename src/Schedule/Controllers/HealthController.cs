@@ -11,7 +11,7 @@ namespace Schedule.Controllers
         [HttpGet("/")]
         public string Index()
         {
-            return $"{DateTime.Now.ToString(CultureInfo.CurrentCulture)} Сервер работает в штатном режиме";
+            return $"{DateTime.Now.ToString(CultureInfo.CurrentCulture)} Сервер работает в штатном режиме debug 1/0";
         }
     }
 }
