@@ -46,6 +46,7 @@ namespace Schedule.Commands
         {
             if (update.Message != null)
                 return update.Message.Text.ToLower().Contains("старт") ||
+                       update.Message.Text.ToLower().Contains("start") ||
                        update.Message.Text.ToLower().Contains("начать");
             return false;
         }
