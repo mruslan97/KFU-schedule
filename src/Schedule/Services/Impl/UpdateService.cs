@@ -4,11 +4,13 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
+using CodeJam.Collections;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Schedule.Entities;
 using Schedule.Entities.Kpfu;
+using Schedule.Extensions;
 using Storage.Abstractions.UnitOfWork;
 
 using vm = Schedule.Models;
@@ -30,9 +32,22 @@ namespace Schedule.Services.Impl
 
         public ILogger<ScheduleService> Logger { get; set; }
         
+        public IScheduleService ScheduleService { get; set; }
+        
         public async Task UpdateLocaleStorage()
         {
+            var newGroups = await ScheduleService.GetGroups();
+            
+            
             var groups = Groups.GetAll().ToList();
+            var uniqueNewGroups = newGroups.ExceptBy(groups, x => x.GroupName).ToList();
+
+            if (uniqueNewGroups.Count > 0)
+            {
+                UowFactory.Transaction(() => Groups.AddRange(uniqueNewGroups));
+                Logger.LogInformation($"Сохранено {uniqueNewGroups.Count} новых групп");
+            }
+
             using (var httpClient = HttpClientFactory.CreateClient())
             {
                 foreach (var group in groups)

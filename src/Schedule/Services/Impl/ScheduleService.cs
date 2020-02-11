@@ -55,15 +55,15 @@ namespace Schedule.Services.Impl
             }
             
             Logger.LogInformation($"Очистка базы данных завершена");
-            var groups = await GetGroups();
+            var groups = await SaveGroups();
             Logger.LogInformation($"Загружено {groups.Count} групп");
-            var teachers = await GetTeachers();
+            var teachers = await SaveTeachers();
             Logger.LogInformation($"Загружено {teachers.Count} сотрудников");
-            var subjects = await GetSubjects(groups);
+            var subjects = await SaveSubjects(groups);
             Logger.LogInformation($"Загружено {subjects.Count} уникальных пар");
         }
 
-        private async Task<List<Group>> GetGroups()
+        public async Task<List<Group>> GetGroups()
         {
             using (var httpClient = HttpClientFactory.CreateClient())
             {
@@ -74,13 +74,20 @@ namespace Schedule.Services.Impl
                 var json = await response.Content.ReadAsStringAsync();
                 var groupsRoot = JsonConvert.DeserializeObject<KpfuGroupRoot>(json);
                 var groups = groupsRoot.Groups.Select(group => Mapper.Map<Group>(group)).ToList();
-                groups.ForEach(x => UowFactory.Transaction(() => { Groups.Add(x); }));
-                
-                return Groups.GetAll().ToList();
+
+                return groups;
             }
         }
 
-        private async Task<List<Teacher>> GetTeachers()
+        private async Task<List<Group>> SaveGroups()
+        {
+            var groups = await GetGroups();
+            groups.ForEach(x => UowFactory.Transaction(() => { Groups.Add(x); }));
+                
+            return Groups.GetAll().ToList();
+        }
+
+        private async Task<List<Teacher>> SaveTeachers()
         {
             using (var httpClient = HttpClientFactory.CreateClient())
             {
@@ -97,7 +104,7 @@ namespace Schedule.Services.Impl
             }
         }
 
-        private async Task<List<Subject>> GetSubjects(List<Group> groups)
+        private async Task<List<Subject>> SaveSubjects(List<Group> groups)
         {
             var allSubjects = new List<Subject>();
             using (var httpClient = HttpClientFactory.CreateClient())
