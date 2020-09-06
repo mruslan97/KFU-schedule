@@ -73,6 +73,21 @@ namespace Schedule.Commands
                         return UpdateHandlingResult.Handled;
                     }
 
+                    // TODO выпилить после восстановления S3
+                    if (update.Message.Text.Contains("картинка"))
+                    {
+                        _vkApi.Messages.Send(new MessagesSendParams
+                        {
+                            UserId = user.UserId,
+                            Message = $"Картинки пока не завезли :(",
+                            PeerId = _options.Value.GroupId,
+                            RandomId = random.Next(int.MaxValue),
+                            Keyboard = MessageDecorator.BuildMainMenu()
+                        });
+
+                        return UpdateHandlingResult.Handled;
+                    }
+
                     user.ScheduleType = update.Message.Text.Contains("картинка", StringComparison.InvariantCultureIgnoreCase)
                         ? ScheduleType.Image
                         : ScheduleType.Text;

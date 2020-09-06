@@ -5,10 +5,12 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
+using CodeJam.Collections;
 using CodeJam.Strings;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
+using NLog.Fluent;
 using Schedule.Entities;
 using Schedule.Entities.Kpfu;
 using Schedule.Extensions;
@@ -17,8 +19,11 @@ using vm = Schedule.Models;
 
 namespace Schedule.Services.Impl
 {
+    /// <inheritdoc />
     public class ScheduleService : IScheduleService
     {
+        #region di properties
+
         public IOptions<vm.DomainOptions> Options { get; set; }
 
         public IMapper Mapper { get; set; }
@@ -34,7 +39,12 @@ namespace Schedule.Services.Impl
         public IHttpClientFactory HttpClientFactory { get; set; }
 
         public ILogger<ScheduleService> Logger { get; set; }
+        
+        public IParserService ParserService { get; set; }
 
+        #endregion
+
+        /// <inheritdoc />
         public async Task InitializeLocalStorage()
         {
             try
@@ -63,57 +73,28 @@ namespace Schedule.Services.Impl
             Logger.LogInformation($"Загружено {subjects.Count} уникальных пар");
         }
 
-        public async Task<List<Group>> GetGroups()
+        /// <inheritdoc />
+        public async Task UpdateSubjects()
         {
-            using (var httpClient = HttpClientFactory.CreateClient())
+            var newGroups = await ParserService.GetGroups();
+
+            var groups = Groups.GetAll().ToList();
+            var uniqueNewGroups = newGroups.ExceptBy(groups, x => x.GroupName).ToList();
+
+            if (uniqueNewGroups.Count > 0)
             {
-                Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-                var encoding = CodePagesEncodingProvider.Instance.GetEncoding(1251);
-                var response = await httpClient.GetAsync(
-                    $"{Options.Value.KpfuHost}/e-ksu/portal_pg_mobile.get_group_list");
-                var json = await response.Content.ReadAsStringAsync();
-                var groupsRoot = JsonConvert.DeserializeObject<KpfuGroupRoot>(json);
-                var groups = groupsRoot.Groups.Select(group => Mapper.Map<Group>(group)).ToList();
-
-                return groups;
+                UowFactory.Transaction(() => Groups.AddRange(uniqueNewGroups));
+                Logger.LogInformation($"Сохранено {uniqueNewGroups.Count} новых групп");
             }
-        }
 
-        private async Task<List<Group>> SaveGroups()
-        {
-            var groups = await GetGroups();
-            groups.ForEach(x => UowFactory.Transaction(() => { Groups.Add(x); }));
-                
-            return Groups.GetAll().ToList();
-        }
-
-        private async Task<List<Teacher>> SaveTeachers()
-        {
-            using (var httpClient = HttpClientFactory.CreateClient())
-            {
-                Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-                var encoding = CodePagesEncodingProvider.Instance.GetEncoding(1251);
-                var response = await httpClient.GetAsync(
-                    $"{Options.Value.KpfuHost}/e-ksu/portal_pg_mobile.get_teacher_list");
-                var json = await response.Content.ReadAsStringAsync();
-                var teacherRoot = JsonConvert.DeserializeObject<KpfuTeacherRoot>(json);
-                var teachers = teacherRoot.Teachers.Select(group => Mapper.Map<Teacher>(group)).ToList();
-                teachers.ForEach(x => UowFactory.Transaction(() => { Teachers.Add(x); }));
-                
-                return teachers;
-            }
-        }
-
-        private async Task<List<Subject>> SaveSubjects(List<Group> groups)
-        {
-            var allSubjects = new List<Subject>();
             using (var httpClient = HttpClientFactory.CreateClient())
             {
                 foreach (var group in groups)
+                {
+                    Logger.LogInformation($"Выполняется обновление для группы {group.GroupName}");
                     try
                     {
                         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-                        
                         // Конвертируем в unicode для совместимости с русскими символами
                         var unicodeGroupName = string.Concat(group.GroupName.Select(c => $@"\u{(int)c:x4}"));
                         var response = await httpClient.GetAsync(
@@ -126,21 +107,122 @@ namespace Schedule.Services.Impl
                             x.GroupName = group.GroupName;
                             x.GroupId = group.Id;
                         });
-                        allSubjects.AddRange(subjects);
+                        using (var uow = UowFactory.Create())
+                        {
+                            Subjects.DeleteRange(Subjects.GetAll().Where(x => x.GroupId == group.Id));
+                            Subjects.AddRange(subjects);
+                            uow.Commit();
+                        }
                     }
                     catch (JsonReaderException e)
                     {
                         Logger.LogError($"Невалидный json, группа {group.GroupName} {e.Message}");
+                        Logger.LogError(JsonConvert.SerializeObject(e));
                     }
                     catch (Exception e)
                     {
-                        Logger.LogError($"Ошибка загрузки группы {group.GroupName} {e.Message}");
+                        Logger.LogError($"Ошибка обновления группы {group.GroupName}");
+                        Logger.LogError(JsonConvert.SerializeObject(e));
                     }
-                
-                UowFactory.Transaction((() => Subjects.AddRange(allSubjects)));
-                
-                return allSubjects;
+                }
             }
         }
+
+        /// <inheritdoc />
+        public async Task UpdateLocalDb()
+        {
+            await MergeGroups();
+            await MergeTeachers();
+            await MergeSubjects();
+        }
+        
+        #region Get and parse schedule data
+
+        private async Task<List<Group>> SaveGroups()
+        {
+            var groups = await ParserService.GetGroups();
+            groups.ForEach(x => UowFactory.Transaction(() => { Groups.Add(x); }));
+                
+            return Groups.GetAll().ToList();
+        }
+
+        private async Task<List<Teacher>> SaveTeachers()
+        {
+            var teachers = await ParserService.GetTeachers();
+            teachers.ForEach(x => UowFactory.Transaction(() => { Teachers.Add(x); }));
+                
+            return teachers;
+        }
+
+        private async Task<List<Subject>> SaveSubjects(List<Group> groups)
+        {
+            var subjects = await ParserService.GetSubjects(groups);
+            subjects.ForEach(x => UowFactory.Transaction(() => { Subjects.Add(x); }));
+
+            return subjects;
+        }
+
+        #endregion
+
+        #region Merge data from site and db
+
+        private async Task MergeGroups()
+        {
+            var groupsFromSite = await ParserService.GetGroups();
+            var localGroups = Groups.GetAll();
+
+            var onlyNewGroups = groupsFromSite.ExceptBy(localGroups, x => x.GroupName).ToList();
+            try
+            {
+                Logger.LogInformation($"Выполняется мерж групп, количество новых: {onlyNewGroups.Count} ");
+                UowFactory.Transaction(() => { Groups.AddRange(onlyNewGroups); });
+            }
+            catch (Exception e)
+            {
+                Logger.LogError("Ошибка мержа групп");
+                Logger.LogError(JsonConvert.SerializeObject(e));
+            }
+        }
+
+        private async Task MergeTeachers()
+        {
+            var teachersFromSite = await ParserService.GetTeachers();
+            var localTeachers = Teachers.GetAll();
+
+            var onlyNewTeachers = teachersFromSite.ExceptBy(localTeachers, x => x.KpfuId).ToList();
+            try
+            {
+                Logger.LogInformation($"Выполняется мерж преподавателей, количество новых: {onlyNewTeachers.Count()}");
+                UowFactory.Transaction(() => { Teachers.AddRange(onlyNewTeachers); });
+            }
+            catch (Exception e)
+            {
+                Logger.LogError("Ошибка мержа преподавателей");
+                Logger.LogError(JsonConvert.SerializeObject(e));
+            }
+        }
+
+        private async Task MergeSubjects()
+        {
+            // Удаляем существующие предметы, т.к. они не имеют внешних зависимостей. 
+            UowFactory.Transaction((() => { Subjects.DeleteRange(Subjects.GetAll()); }));
+            var groups = Groups.GetAll();
+            
+            var subjects = await ParserService.GetSubjects(groups);
+            try
+            {
+                Logger.LogInformation($"Выполняется загрузка новых предметов, количество новых: {subjects.Count()}");
+                UowFactory.Transaction(() => { Subjects.AddRange(subjects); });
+            }
+            catch (Exception e)
+            {
+                Logger.LogError("Ошибка загрузки новых предметов");
+                Logger.LogError(JsonConvert.SerializeObject(e));
+            }
+            
+        }
+
+        #endregion
+        
     }
 }

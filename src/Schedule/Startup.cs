@@ -104,9 +104,9 @@ namespace Schedule
             services.AddTransient<IScheduleService, ScheduleService>();
             services.AddTransient<IQueryFetchDecorator, SearchQueryDecorator>();
             services.AddTransient<IQueryFetchDecorator, OrderByQueryDecorator>();
-            services.AddTransient<IUpdateService, UpdateService>();
             services.AddTransient<IVkSenderService, VkSenderService>();
             services.AddTransient<IObjectStorageService, ObjectStorageService>();
+            services.AddTransient<IParserService, ParserService>();
             
             services.AddSwaggerGen(c =>
             {
@@ -122,14 +122,14 @@ namespace Schedule
             services.AddSingleton<IVkApi>(sp =>
             {
                 var api = new VkApi(services);
-
+            
                 api.Authorize(new ApiAuthParams
                 {
                     AccessToken = Configuration.GetSection("VkToken").Get<string>(),
                     Settings = Settings.Messages
-
+            
                 });
-
+            
                 return api;
             });
 
@@ -176,7 +176,7 @@ namespace Schedule
             app.UseHangfireDashboard();
             app.UseHangfireServer();
 
-            RecurringJob.AddOrUpdate<IUpdateService>(u => u.UpdateLocaleStorage(), Cron.Daily(2));
+            RecurringJob.AddOrUpdate<IScheduleService>(u => u.UpdateSubjects(), Cron.Daily(2));
             app.UseSwaggerUI(c =>
             {
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");

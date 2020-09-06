@@ -5,7 +5,7 @@ using Schedule.Entities;
 
 namespace Schedule.Controllers
 {
-    [Route("api/[controller]", Name = nameof(TeacherController)), Produces("application/json"), AllowAnonymous]
+    [Route("api/[controller]", Name = nameof(TeacherController)), Produces("application/json"), Authorize(Policy = "ApiKeyPolicy")]
     public class TeacherController : BaseCrudController<Teacher>
     {
 

@@ -9,6 +9,7 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Schedule.Controllers.Base;
 using Schedule.Entities;
@@ -23,8 +24,9 @@ namespace Schedule.Controllers
     public class ScheduleController : Controller
     {
         public IScheduleService ScheduleService { get; set; }
+        
+        public IOptions<vm.DomainOptions> Options { get; set; }
 
-        public IUpdateService UpdateService { get; set; }
 
         [HttpGet("initialize")]
         public async Task<IActionResult> InitializeDb()
@@ -34,14 +36,24 @@ namespace Schedule.Controllers
             return Ok("База университета успешно выгружена");
         }
 
-        [HttpGet("update")]
-        public async Task<IActionResult> UpdateDb()
+        [HttpGet("updateLocalDb")]
+        public async Task<IActionResult> UpdateLocalDb()
         {
             var stopWatch = new Stopwatch();
             stopWatch.Start();
-            await UpdateService.UpdateLocaleStorage();
+            await ScheduleService.UpdateLocalDb();
             stopWatch.Stop();
-            return Ok($"База предметов успешно обновлена, {stopWatch.Elapsed.TotalSeconds} сек.");
+            return Ok($"База успешно обновлена, {stopWatch.Elapsed.TotalSeconds} сек. Текущие настройки: год {Options.Value.Year} // семестр {Options.Value.Semester}");
+        }
+
+        [HttpGet("updateSubjects")]
+        public async Task<IActionResult> UpdateSubjects()
+        {
+            var stopWatch = new Stopwatch();
+            stopWatch.Start();
+            await ScheduleService.UpdateSubjects();
+            stopWatch.Stop();
+            return Ok($"Таблица предметов успешно обновлена, {stopWatch.Elapsed.TotalSeconds} сек.");
         }
     }
 }

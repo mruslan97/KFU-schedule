@@ -3,6 +3,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
@@ -11,7 +12,7 @@ using Schedule.Entities.Kpfu;
 
 namespace Schedule.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/[controller]"), Authorize(Policy = "ApiKeyPolicy")]
     [ApiController]
     public class ProxyController : Controller
     {
