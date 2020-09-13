@@ -26,7 +26,7 @@ namespace Storage.EFCore.Extensions
         public static IServiceCollection AddDataContext(this IServiceCollection serviceCollection, Action<DbContextOptionsBuilder> options)
         {
             //contexts
-            serviceCollection.AddDbContext<DataContext>(options, ServiceLifetime.Transient);
+            serviceCollection.AddDbContext<DataContext>(options, ServiceLifetime.Scoped);
 
             serviceCollection.Add(new ServiceDescriptor(typeof(ICreateTransactionFacade), typeof(CreateTransactionFacade.Impl.CreateTransactionFacade), ServiceLifetime.Scoped));
 
