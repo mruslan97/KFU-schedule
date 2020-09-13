@@ -74,7 +74,7 @@ namespace Schedule.Commands
                     }
 
                     // TODO выпилить после восстановления S3
-                    if (update.Message.Text.Contains("картинка"))
+                    if (update.Message.Text.Contains("картинка", StringComparison.InvariantCultureIgnoreCase))
                     {
                         _vkApi.Messages.Send(new MessagesSendParams
                         {

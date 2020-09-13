@@ -15,7 +15,7 @@ namespace Schedule.Extensions
     {
         public static string ToMessage(this IEnumerable<Subject> subjects, DayOfWeek day, bool showGroup = false)
         {
-            if (!subjects.Any()) return "Выходной день";
+            if (!subjects.Any()) return "Нет данных/Выходной день";
             var stringBuilder = new StringBuilder();
             var subjectNumber = 1;
             var culture = new CultureInfo("ru-Ru");
