@@ -83,6 +83,18 @@ namespace Schedule.Commands
                     //&& x.StartDay.Value <= monday
                 ).ToList();//&& x.EndDay.Value >= sunday).ToList(); TODO uncomment 11.02 
                 var daysOfWeek = subjects.OrderBy(x => x.DayOfWeek).Select(x => x.DayOfWeek).Distinct();
+
+                if (!daysOfWeek.Any())
+                {
+                    _vkApi.Messages.Send(new MessagesSendParams
+                    {
+                        UserId = user.UserId,
+                        Message = "Нет данных по твоей группе, попробуй проверить позже", 
+                        PeerId = _options.Value.GroupId,
+                        RandomId = random.Next(int.MaxValue),
+                    });
+                }
+                
                 foreach (var day in daysOfWeek)
                 {
                     _vkApi.Messages.Send(new MessagesSendParams
