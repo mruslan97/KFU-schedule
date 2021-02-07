@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -94,14 +94,10 @@ namespace Schedule
                 .AddControllersAsServices()
                 .SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
             services.AddDataContext(builder =>
-            {
                 builder.UseNpgsql(Configuration.GetConnectionString("Default"),
-                        optionsBuilder =>
-                            optionsBuilder.MigrationsAssembly(typeof(DataContextFactory).Assembly.FullName))
+                        optionsBuilder => optionsBuilder.MigrationsAssembly(typeof(DataContextFactory).Assembly.FullName))
                     .EnableDetailedErrors()
-                    .EnableSensitiveDataLogging();
-                builder.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
-            });
+                    .EnableSensitiveDataLogging());
             services.AddHttpClient();
             services.Configure<DomainOptions>(Configuration.GetSection(nameof(DomainOptions)));
             services.Configure<StorageOptions>(Configuration.GetSection(nameof(StorageOptions)));

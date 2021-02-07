@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
@@ -24,8 +24,6 @@ namespace Storage.EFCore.Repository.Impl
         public EFRepository(DataContext currentDbContext)
         {
             this.currentDbContext = currentDbContext;
-            this.currentDbContext.ChangeTracker.AutoDetectChangesEnabled = false;
-
         }
 
         [CanBeNull]
@@ -43,14 +41,14 @@ namespace Storage.EFCore.Repository.Impl
                 setEntity = queryExpression(setEntity);
             }
 
-            return setEntity.AsNoTracking().FirstOrDefault(entity => entity.Id == id);
+            return setEntity.FirstOrDefault(entity => entity.Id == id);
         }
 
         public IQueryable<TEntity> GetAll(
             bool returnDeleted = false,
             bool returnDeletedChildren = false)
         {
-            var setEntity = (IQueryable<TEntity>)currentDbContext.Set<TEntity>().AsNoTracking();
+            var setEntity = (IQueryable<TEntity>)currentDbContext.Set<TEntity>();
 
             setEntity = SetUndeletable(setEntity, returnDeleted, returnDeletedChildren);
 
@@ -73,18 +71,8 @@ namespace Storage.EFCore.Repository.Impl
 
         public TEntity Update(TEntity entity)
         {
-            var local = currentDbContext.Set<TEntity>()
-                .Local
-                .FirstOrDefault(entry => entry.Id.Equals(entity.Id));
-            if (local != null)
-            {
-                currentDbContext.Entry(local).State = EntityState.Detached;
-            }
-            currentDbContext.Entry(entity).State = EntityState.Modified;
-            currentDbContext.Set<TEntity>().Update(entity);
+            currentDbContext.Update(entity);
 
-            currentDbContext.SaveChanges();
-            
             return entity;
         }
 
