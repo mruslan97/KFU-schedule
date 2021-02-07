@@ -83,6 +83,8 @@ namespace Storage.EFCore.Repository.Impl
             currentDbContext.Entry(entity).State = EntityState.Modified;
             currentDbContext.Set<TEntity>().Update(entity);
 
+            currentDbContext.SaveChanges();
+            
             return entity;
         }
 
