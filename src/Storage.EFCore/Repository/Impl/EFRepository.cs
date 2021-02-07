@@ -73,7 +73,15 @@ namespace Storage.EFCore.Repository.Impl
 
         public TEntity Update(TEntity entity)
         {
-            currentDbContext.Update(entity);
+            var local = currentDbContext.Set<TEntity>()
+                .Local
+                .FirstOrDefault(entry => entry.Id.Equals(entity.Id));
+            if (local != null)
+            {
+                currentDbContext.Entry(local).State = EntityState.Detached;
+            }
+            currentDbContext.Entry(entity).State = EntityState.Modified;
+            currentDbContext.Set<TEntity>().Update(entity);
 
             return entity;
         }
