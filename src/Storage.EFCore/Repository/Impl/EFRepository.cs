@@ -24,6 +24,8 @@ namespace Storage.EFCore.Repository.Impl
         public EFRepository(DataContext currentDbContext)
         {
             this.currentDbContext = currentDbContext;
+            this.currentDbContext.ChangeTracker.AutoDetectChangesEnabled = false;
+
         }
 
         [CanBeNull]
