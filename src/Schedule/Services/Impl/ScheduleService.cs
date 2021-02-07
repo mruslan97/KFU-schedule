@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using CodeJam.Collections;
 using CodeJam.Strings;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
@@ -205,7 +206,11 @@ namespace Schedule.Services.Impl
         private async Task MergeSubjects()
         {
             // Удаляем существующие предметы, т.к. они не имеют внешних зависимостей. 
-            UowFactory.Transaction((() => { Subjects.DeleteRange(Subjects.GetAll()); }));
+            UowFactory.Transaction((() =>
+            {
+                var subjectsId = Subjects.GetAll().Select(x => x.Id);
+                subjectsId.ForEachAsync(x => Subjects.Delete(x));
+            }));
             var groups = Groups.GetAll();
             
             var subjects = await ParserService.GetSubjects(groups);

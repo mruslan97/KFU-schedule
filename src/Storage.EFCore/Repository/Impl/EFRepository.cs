@@ -41,14 +41,14 @@ namespace Storage.EFCore.Repository.Impl
                 setEntity = queryExpression(setEntity);
             }
 
-            return setEntity.FirstOrDefault(entity => entity.Id == id);
+            return setEntity.AsNoTracking().FirstOrDefault(entity => entity.Id == id);
         }
 
         public IQueryable<TEntity> GetAll(
             bool returnDeleted = false,
             bool returnDeletedChildren = false)
         {
-            var setEntity = (IQueryable<TEntity>)currentDbContext.Set<TEntity>();
+            var setEntity = (IQueryable<TEntity>)currentDbContext.Set<TEntity>().AsNoTracking();
 
             setEntity = SetUndeletable(setEntity, returnDeleted, returnDeletedChildren);
 
